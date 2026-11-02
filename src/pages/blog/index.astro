@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { site } from '../../data/site';
+
+if (!site.blog) return Astro.redirect('/');
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+---
+
+<Base title="Blog" description={`Notes and essays by ${site.name}.`}>
+  <div class="container">
+    <header class="page-head">
+      <p class="prompt"><b>{site.handle}@{site.host}</b>:~$ ls -t ./blog</p>
+      <h1>Blog</h1>
+      <p>Paper notes, experiments and things I learned the hard way. <a href="/rss.xml">RSS</a></p>
+    </header>
+    <ol class="list">
+      {
+        posts.map((p) => (
+          <li>
+            <a class="card row" href={`/blog/${p.id}/`}>
+              <time class="mono" datetime={p.data.pubDate.toISOString()}>{iso(p.data.pubDate)}</time>
+              <div>
+                <h2>{p.data.title}</h2>
+                <p>{p.data.description}</p>
+                {p.data.tags.length > 0 && <ul class="tags">{p.data.tags.map((t) => <li>{t}</li>)}</ul>}
+              </div>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Base>
+
+<style>
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .row {
+    display: grid;
+    gap: 6px 24px;
+  }
+  @media (min-width: 640px) {
+    .row {
+      grid-template-columns: 110px 1fr;
+    }
+  }
+  time {
+    color: var(--accent);
+    font-size: 0.82rem;
+    padding-top: 4px;
+  }
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+  }
+  .row p {
+    margin: 0 0 10px;
+    color: var(--muted);
+  }
+</style>

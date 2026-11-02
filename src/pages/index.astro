@@ -1,0 +1,355 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Terminal from '../components/Terminal.astro';
+import { site, researchExperience, funFacts } from '../data/site';
+import { mdLinks } from '../utils/text';
+
+const posts = site.blog
+  ? (await getCollection('blog', ({ data }) => !data.draft)).sort(
+      (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+    )
+  : [];
+const latest = posts[0];
+const recent = researchExperience.slice(0, 2);
+// "Jun 2025 – Sep 2025" → "2025"
+const yearOf = (period: string) => period.match(/\d{4}(?!.*\d{4})/)?.[0] ?? '';
+const initials = site.name
+  .split(' ')
+  .map((w) => w[0])
+  .join('')
+  .slice(0, 2);
+const fmt = (d: Date) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<Base>
+  <div class="container">
+    <div class="bento">
+      <Terminal />
+
+      <div class="card avatar">
+        {
+          site.photo ? (
+            <img src={site.photo} alt={`Portrait of ${site.name}`} width={site.photoSize.width} height={site.photoSize.height} style={`object-position: ${site.photoPosition}`} />
+          ) : (
+            <div class="mono monogram" aria-hidden="true">{initials}</div>
+          )
+        }
+      </div>
+
+      <div class="card status">
+        <p class="label">status</p>
+        {site.status && <p class="badge mono"><span class="pulse" aria-hidden="true"></span>{site.status}</p>}
+        <p class="where">📍 {site.location}</p>
+        <p class="where">🎓 {site.affiliation}</p>
+      </div>
+
+      <section class="card about">
+        <p class="label">about</p>
+        {site.about.map((p) => <p set:html={mdLinks(p)} />)}
+      </section>
+
+      {
+        latest && (
+          <a class="card post" href={`/blog/${latest.id}/`}>
+            <p class="label">latest post</p>
+            <h3>{latest.data.title}</h3>
+            <p class="meta mono">{fmt(latest.data.pubDate)}</p>
+            <p class="desc">{latest.data.description}</p>
+          </a>
+        )
+      }
+
+      <a class="card cv" href="/cv/">
+        <p class="label">cv</p>
+        <p class="big">Education, experience &amp; research</p>
+        <p class="meta mono">{site.resumePdf ? 'full cv · resume pdf →' : 'view cv →'}</p>
+      </a>
+    </div>
+
+    <section class="section" aria-labelledby="research-h">
+      <div class="section-head">
+        <h2 id="research-h">Recent research</h2>
+        <p class="mono">$ ls -t ./research | head -2</p>
+        <a class="all mono" href="/research/">all research →</a>
+      </div>
+      <div class="research-grid">
+        {
+          recent.map((r) => (
+            <article class="card rcard">
+              <p class="yr mono">{yearOf(r.period)}</p>
+              <h3>{r.title}</h3>
+              {r.links && (
+                <div class="rfoot">
+                  {r.links.map((l) => (
+                    <a class="btn" href={l.url}>
+                      {l.label} ↗
+                    </a>
+                  ))}
+                </div>
+              )}
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="section facts" aria-labelledby="facts-h">
+      <div class="section-head">
+        <h2 id="facts-h">Fun facts</h2>
+        <p class="mono">$ cat -n fun_facts.txt</p>
+      </div>
+      <ol class="card mono">
+        {funFacts.map((f) => <li>{f}</li>)}
+      </ol>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .bento {
+    display: grid;
+    gap: 14px;
+    padding-top: 28px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 720px) {
+    .bento {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bento > :global(.term),
+    .about,
+    .cv {
+      grid-column: span 2;
+    }
+  }
+  @media (min-width: 1000px) {
+    .bento {
+      grid-template-columns: repeat(6, 1fr);
+      padding-top: 40px;
+    }
+    .bento > :global(.term) {
+      grid-column: span 4;
+      grid-row: span 2;
+    }
+    .avatar,
+    .status {
+      grid-column: span 2;
+    }
+    .about {
+      grid-column: span 4;
+    }
+    .post,
+    .cv {
+      grid-column: span 2;
+    }
+  }
+
+  .avatar {
+    padding: 0;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    display: grid;
+  }
+  @media (min-width: 1000px) {
+    .avatar {
+      aspect-ratio: auto;
+    }
+  }
+  .avatar {
+    position: relative;
+    min-height: 220px;
+  }
+  .avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .monogram {
+    display: grid;
+    place-items: center;
+    font-size: 3.4rem;
+    font-weight: 600;
+    color: var(--accent);
+    background:
+      radial-gradient(circle at 30% 20%, var(--accent-soft), transparent 60%),
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 12px),
+      var(--surface-2);
+  }
+
+  .status p {
+    margin: 0 0 6px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    margin-bottom: 14px !important;
+  }
+  .pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent);
+    animation: ping 2s infinite;
+  }
+  @keyframes ping {
+    70% {
+      box-shadow: 0 0 0 8px transparent;
+    }
+  }
+  .where {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .about p:not(.label) {
+    margin: 0 0 12px;
+  }
+  .about :global(a) {
+    color: var(--text);
+  }
+  .about :global(a:hover) {
+    color: var(--accent);
+  }
+  .about p:last-child {
+    margin-bottom: 0;
+  }
+
+  .post h3 {
+    margin-bottom: 4px;
+  }
+  .meta {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .desc {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .cv {
+    display: flex;
+    flex-direction: column;
+  }
+  .cv .big {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.3;
+    margin: 0 0 auto;
+    padding-bottom: 12px;
+  }
+  .cv:hover .meta {
+    color: var(--accent);
+  }
+
+  .section {
+    margin-top: 64px;
+  }
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    margin-bottom: 14px;
+  }
+  .section-head h2 {
+    margin: 0;
+  }
+  .section-head p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .section-head .all {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .section-head .all:hover {
+    color: var(--accent);
+  }
+
+  .research-grid {
+    display: grid;
+    gap: 14px;
+  }
+  @media (min-width: 900px) {
+    .research-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .rcard {
+    display: flex;
+    flex-direction: column;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rcard::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent 70%);
+  }
+  .yr {
+    margin: 0 0 10px;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .rcard h3 {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    margin: 0;
+    flex: 1;
+  }
+  .rfoot {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .rfoot .btn {
+    padding: 5px 12px;
+    font-size: 0.78rem;
+  }
+
+  .facts ol {
+    margin: 0;
+    padding: 18px 22px 18px 52px;
+    font-size: 0.88rem;
+    counter-reset: n;
+    list-style: none;
+  }
+  .facts li {
+    counter-increment: n;
+    position: relative;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .facts li:last-child {
+    border-bottom: 0;
+  }
+  .facts li::before {
+    content: counter(n);
+    position: absolute;
+    left: -32px;
+    width: 20px;
+    text-align: right;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+</style>

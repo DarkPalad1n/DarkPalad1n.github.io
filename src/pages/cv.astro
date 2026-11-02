@@ -1,0 +1,100 @@
+---
+import Base from '../layouts/Base.astro';
+import { site, education, experience, researchExperience, teaching, leadership, type CvEntry } from '../data/site';
+
+const sections: { title: string; entries: CvEntry[] }[] = [
+  { title: 'Education', entries: education },
+  { title: 'Experience', entries: experience },
+  { title: 'Research', entries: researchExperience },
+  { title: 'Teaching', entries: teaching },
+  { title: 'Leadership & Service', entries: leadership },
+];
+---
+
+<Base title="CV" description={`Curriculum vitae of ${site.name}.`}>
+  <div class="container">
+    <header class="page-head head">
+      <div>
+        <p class="prompt"><b>{site.handle}@{site.host}</b>:~$ less cv.md</p>
+        <h1>Curriculum Vitae</h1>
+      </div>
+      {site.resumePdf && <a class="btn primary" href={site.resumePdf} download>↓ Resume (PDF, 1 page)</a>}
+    </header>
+
+    {
+      sections.map((s) => (
+        <section class="block">
+          <h2>{s.title}</h2>
+          <ol class="timeline">
+            {s.entries.map((e) => (
+              <li>
+                <p class="period mono">{e.period}</p>
+                <div class="card">
+                  <h3>{e.title}</h3>
+                  <p class="org">
+                    {e.org}
+                    {e.place && <span> · {e.place}</span>}
+                  </p>
+                  {e.courses && <p class="org">Courses: {e.courses.join(', ')}</p>}
+                  {e.supervisor && (
+                    <p class="org">
+                      Supervisor:{' '}
+                      {e.supervisor.url ? <a href={e.supervisor.url}>{e.supervisor.name}</a> : e.supervisor.name}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .block {
+    margin-top: 40px;
+  }
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 18px;
+    border-left: 2px solid var(--border);
+    display: grid;
+    gap: 18px;
+  }
+  .timeline > li {
+    position: relative;
+  }
+  .timeline > li::before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+  }
+  .period {
+    margin: 0 0 6px;
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+  .timeline h3 {
+    margin-bottom: 2px;
+  }
+  .org {
+    margin: 0;
+    color: var(--muted);
+  }
+</style>

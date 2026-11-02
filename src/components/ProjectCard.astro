@@ -1,0 +1,58 @@
+---
+import type { Project } from '../data/site';
+
+interface Props {
+  project: Project;
+}
+const { project: p } = Astro.props;
+const Tag = p.url ? 'a' : 'article';
+---
+
+<Tag class="card project" href={p.url}>
+  <div class="top mono">
+    <span class="dir">./{p.name}</span>
+    {p.year && <span class="year">{p.ongoing ? `${p.year} – present` : p.year}</span>}
+    {p.url && <span class="arrow" aria-hidden="true">↗</span>}
+  </div>
+  <p>{p.description}</p>
+  <ul class="tags">{p.tags.map((t) => <li>{t}</li>)}</ul>
+</Tag>
+
+<style>
+  .project {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+  }
+  .top {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .dir {
+    color: var(--accent);
+    overflow-wrap: anywhere;
+  }
+  .year {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.78rem;
+  }
+  .arrow {
+    margin-left: auto;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  a.project:hover .arrow {
+    transform: translate(2px, -2px);
+    color: var(--accent);
+  }
+  p {
+    margin: 0;
+    color: var(--muted);
+    flex: 1;
+  }
+</style>

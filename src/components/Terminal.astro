@@ -1,0 +1,129 @@
+---
+import { site } from '../data/site';
+
+const prompt = `${site.handle}@${site.host}`;
+const links = [
+  site.links.github && { label: 'github', href: site.links.github },
+  site.links.linkedin && { label: 'linkedin', href: site.links.linkedin },
+  { label: 'cv', href: '/cv/' },
+].filter(Boolean) as { label: string; href: string }[];
+---
+
+<section class="term card" aria-label="Introduction">
+  <div class="chrome mono" aria-hidden="true">
+    <i></i><i></i><i></i>
+    <span>{prompt}: ~</span>
+  </div>
+  <div class="body mono">
+    <p class="ln" style="--i:0"><span class="p">{prompt}:~$</span> whoami</p>
+    <h1 class="ln name" style="--i:1">{site.name}</h1>
+    <p class="ln out" style="--i:2">{site.role} @ <span class="hl">{site.affiliation}</span></p>
+
+    <p class="ln" style="--i:3"><span class="p">{prompt}:~$</span> cat mission.txt</p>
+    <p class="ln out tagline" style="--i:4">{site.tagline}</p>
+
+    <p class="ln" style="--i:5"><span class="p">{prompt}:~$</span> ls ./links</p>
+    <p class="ln out links" style="--i:6">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+    </p>
+
+  </div>
+</section>
+
+<style>
+  .term {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .chrome i {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .chrome i:first-child {
+    background: var(--anomaly);
+  }
+  .chrome i:nth-child(2) {
+    background: #f0b43e;
+  }
+  .chrome i:nth-child(3) {
+    background: var(--accent);
+  }
+  .chrome span {
+    margin-left: 8px;
+  }
+  .body {
+    padding: 22px 22px 26px;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    flex: 1;
+  }
+  .ln {
+    margin: 0;
+    opacity: 0;
+    transform: translateY(4px);
+    animation: in 0.35s ease forwards;
+    animation-delay: calc(var(--i) * 0.22s + 0.1s);
+  }
+  .p {
+    color: var(--accent);
+  }
+  .out {
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .ln:last-child {
+    margin-bottom: 0;
+  }
+  .hl {
+    color: var(--text);
+  }
+  .name {
+    font-family: var(--font-sans), sans-serif;
+    font-size: clamp(2rem, 5vw, 2.6rem);
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin: 6px 0 4px;
+  }
+  .tagline {
+    color: var(--text);
+    font-family: var(--font-sans), sans-serif;
+    font-size: 1.05rem;
+    max-width: 52ch;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+  }
+  .links a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .links a::after {
+    content: '/';
+    color: var(--muted);
+  }
+  .links a:hover {
+    color: var(--accent);
+  }
+  @keyframes in {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

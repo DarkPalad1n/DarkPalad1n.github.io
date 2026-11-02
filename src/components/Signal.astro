@@ -1,0 +1,138 @@
+---
+// A synthetic time-series with one detected anomaly — the site's visual motif.
+// Generated at build time with a fixed seed, so it looks the same on every load.
+interface Props {
+  height?: number;
+  seed?: number;
+}
+const { height = 150, seed = 7 } = Astro.props;
+
+const W = 600;
+const H = height;
+const N = 140;
+const A0 = 92; // anomaly window start
+const A1 = 100; // anomaly window end
+
+let s = seed;
+const rand = () => ((s = (s * 16807) % 2147483647) / 2147483647) - 0.5;
+
+const ys = Array.from({ length: N }, (_, i) => {
+  let y = Math.sin(i * 0.26) * 0.45 + Math.sin(i * 0.071) * 0.25 + rand() * 0.18;
+  if (i >= A0 && i <= A1) {
+    const k = (i - A0) / (A1 - A0);
+    y += Math.sin(k * Math.PI) * 1.25 * (i % 2 ? 1 : -0.6);
+  }
+  return y;
+});
+
+const pad = 10;
+const min = Math.min(...ys);
+const max = Math.max(...ys);
+const x = (i: number) => (i / (N - 1)) * W;
+const y = (v: number) => pad + (1 - (v - min) / (max - min)) * (H - 2 * pad);
+const toPath = (from: number, to: number) =>
+  ys
+    .slice(from, to + 1)
+    .map((v, j) => `${j ? 'L' : 'M'}${x(from + j).toFixed(1)},${y(v).toFixed(1)}`)
+    .join(' ');
+
+const full = toPath(0, N - 1);
+const anomaly = toPath(A0 - 1, A1 + 1);
+const peak = ys.slice(A0, A1 + 1).reduce((b, v, j) => (Math.abs(v) > Math.abs(ys[b]) ? A0 + j : b), A0);
+const bandX = x(A0 - 2);
+const bandW = x(A1 + 2) - bandX;
+---
+
+<figure class="signal" aria-label="Illustration: a time-series with one highlighted anomaly">
+  <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-hidden="true">
+    <rect class="band" x={bandX} y="0" width={bandW} height={H} rx="6"></rect>
+    <line class="thr" x1="0" x2={W} y1={y(max * 0.72)} y2={y(max * 0.72)}></line>
+    <path class="line" d={full} pathLength="1"></path>
+    <path class="hit" d={anomaly} pathLength="1"></path>
+    <circle class="dot" cx={x(peak)} cy={y(ys[peak])} r="4.5"></circle>
+  </svg>
+  <figcaption class="mono">
+    <span class="ok">● normal</span>
+    <span class="bad">● anomaly @ t={peak}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .signal {
+    margin: 0;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .band {
+    fill: var(--anomaly-soft);
+    opacity: 0;
+    animation: fade 0.5s ease 1.5s forwards;
+  }
+  .thr {
+    stroke: var(--muted);
+    stroke-width: 1;
+    stroke-dasharray: 4 6;
+    opacity: 0.45;
+    vector-effect: non-scaling-stroke;
+  }
+  .line,
+  .hit {
+    fill: none;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .line {
+    stroke: var(--accent);
+    stroke-width: 2;
+    animation: draw 1.8s ease-out forwards;
+  }
+  .hit {
+    stroke: var(--anomaly);
+    stroke-width: 2.6;
+    animation: draw 0.5s ease-out 1.3s forwards;
+  }
+  .dot {
+    fill: var(--anomaly);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation:
+      fade 0.3s ease 1.7s forwards,
+      pulse 2s ease-in-out 2s infinite;
+  }
+  figcaption {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .ok::first-letter {
+    color: var(--accent);
+  }
+  .bad::first-letter {
+    color: var(--anomaly);
+  }
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes fade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes pulse {
+    50% {
+      transform: scale(1.6);
+    }
+  }
+</style>

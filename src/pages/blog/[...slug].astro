@@ -1,0 +1,100 @@
+---
+import { type CollectionEntry, getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { site } from '../../data/site';
+
+export async function getStaticPaths() {
+  if (!site.blog) return [];
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: post }));
+}
+type Props = CollectionEntry<'blog'>;
+
+const post = Astro.props;
+const { Content, headings } = await render(post);
+const fmt = (d: Date) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+const minutes = Math.max(1, Math.round((post.body ?? '').split(/\s+/).length / 220));
+---
+
+<Base title={post.data.title} description={post.data.description}>
+  <article class="container">
+    <header class="page-head">
+      <p class="prompt"><a href="/blog/">← <b>cd ../blog</b></a></p>
+      <h1>{post.data.title}</h1>
+      <p class="mono meta">
+        {fmt(post.data.pubDate)} · {minutes} min read
+        {post.data.updatedDate && <span> · updated {fmt(post.data.updatedDate)}</span>}
+      </p>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <footer class="end mono">
+      <span>— {site.name}</span>
+      <a href="/blog/">all posts →</a>
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .prompt a {
+    text-decoration: none;
+  }
+  .meta {
+    font-size: 0.82rem;
+  }
+  .prose {
+    max-width: 70ch;
+    font-size: 1.05rem;
+  }
+  .prose :global(h2) {
+    margin-top: 2em;
+  }
+  .prose :global(h2::before) {
+    content: '## ';
+    color: var(--accent);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8em;
+  }
+  .prose :global(pre) {
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .prose :global(:not(pre) > code) {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 0.88em;
+  }
+  .prose :global(blockquote) {
+    margin: 1.5em 0;
+    padding: 4px 18px;
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+  }
+  .prose :global(img) {
+    max-width: 100%;
+    border-radius: 14px;
+  }
+  .prose :global(li::marker) {
+    color: var(--accent);
+  }
+  .end {
+    max-width: 70ch;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .end a {
+    text-decoration: none;
+  }
+</style>

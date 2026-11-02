@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import Signal from '../components/Signal.astro';
+---
+
+<Base title="404">
+  <div class="container">
+    <header class="page-head">
+      <p class="prompt"><b>$</b> cd /nowhere</p>
+      <h1>404 — anomaly detected</h1>
+      <p>This page doesn't exist. Statistically speaking, that's unusual.</p>
+    </header>
+    <div class="card"><Signal seed={3} /></div>
+    <p><a class="btn" href="/">cd ~</a></p>
+  </div>
+</Base>
